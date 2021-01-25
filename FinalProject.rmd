@@ -1,0 +1,554 @@
+---
+title: "Analysis on Credit card customers"  
+output: html_document
+---
+ *Anumeha* *Mishra - CS 544 Term Project*
+ *December 7, 2020*
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction 
+This dataset has been taken from kaggle and the link is as below: https://www.kaggle.com/sakshigoyal7/credit-card-customers
+
+This dataset contains personal information of the customers such as their age, marital status, income,etc.
+
+This dataset contains 10,128 rows and 20 columns.
+
+The columns attributes are :
+
+CLIENTNUM, Attrition flag,Customer_Age , Gender , Dependent_count , Education_Level, Marital_Status, Income_Category, Card_Category, Months_on_book, Total_Relationship_Count, Months_Inactive, Contacts_Count,Credit_Limit,Total_Revolving_Bal, Total_Amt_Chng_Q4_Q1,Total_Trans_Amt,Total_Trans_Ct,Total_Ct_Chng_Q4_Q1,Avg_Utilization_Ratio
+
+## Objective
+
+The objective of this project is to gain an insight on customers banking and show visualizations on different trends based on their age, gender and marital status.
+
+
+## Preparing the data
+
+You should consider writing a function whenever you've copied and pasted a block of code more than twice (i.e. you now have three copies of the same code). For example, take a look at this code. What does it do?
+
+```{r}
+data <- as.data.frame(read.csv("/Users/anumehamishra/Desktop/BankChurners.csv", header=T, sep=",", na.strings = c("","NA")))
+head(data)
+```
+
+
+#### Analyzing the data
+##### PART 1
+###### Categorical 1- Finding the number of males and females customers
+```{r}
+table(data$Gender)
+barplot(table(data$Gender), col = "cyan", ylim = c(0,6000), las = 2, xlab = "Gender",ylab = "Number of customers")
+```
+
+
+###### Finding the martial status distributions of the customers
+
+
+```{r}
+table(data$Marital_Status)
+barplot(table(data$Marital_Status), col = "cyan", ylim = c(0,5000), las = 2, xlab = "Marital_Status",ylab = "Number of customers")
+```
+
+
+###### Numerical 1- Finding the number of males and females customers who have dependents as = 5 
+
+
+```{r}
+Dependents <- data[data$Dependent_count == '5', ]
+table(Dependents$Gender)
+barplot(table(Dependents$Gender), col = "red", ylim = c(0,250), density=c(10,20),las = 2, xlab = "Dependents = 5", ylab = "Number of customers")
+```
+
+
+##### PART 2
+###### Categorical 2- Calculating distribution of  education level among customers
+
+```{r}
+Education_Level <- table(data$Education_Level)
+slice.labels <- names(Education_Level)
+slice.percents <- round(Education_Level/sum(Education_Level)*100)
+slice.labels <- paste(slice.labels, slice.percents)
+slice.labels <- paste(slice.labels, "%", sep = "")
+pie(Education_Level, labels = slice.labels, col = hcl(c(0, 60, 120)))
+```
+
+
+##### PART 3
+###### Numerical -  numeric data and analyzing distribution on it 
+
+
+##### a.  Finding the summary of my data on the basis of Age
+
+###### Boxplot showing the ages of customers 
+
+```{r}
+fivenum(data$Customer_Age)
+boxplot(data$Customer_Age, horizontal = TRUE, xaxt = "n", xlab = "Age of customers", col=hcl(1))
+axis(side = 1, at=fivenum(data$Customer_Age), labels = TRUE)
+```
+
+
+##### b. This will show the distribution of status of customers based on thier age.
+```{r}
+age_status <- fivenum(data$Customer_Age)
+age_status
+library(ggplot2)
+ggplot(data, aes(x=Customer_Age)) +
+  geom_histogram(color="black", fill="blue") + facet_grid(~Attrition_Flag)
+```
+
+
+
+#####  c- The distriution of age varying with 5 dependents
+```{r}
+Dependents <- data[data$Dependent_count == '5',]
+head(Dependents)
+A <- Dependents$Customer_Age
+B <- Dependents$Customer_Age
+boxplot(A,B, xaxt = "n", xlab = "variations of age with 5 dependents", ylab = "Age of Customers", col=c("yellow", "green"))
+```
+
+
+
+#####  d- Scatter Plot- Showing age of the customers, count of Dependents and the count of transactions
+```{r}
+data2=data.frame(Age=data$Customer_Age,Dependent=data$Dependent_count,Transactions=data$Total_Trans_Ct)
+head(data2,10)
+plot(data2 , pch=20 , cex=1.0 , col="lightblue")
+```
+
+
+#####  e- Plotted a ggplot for age vs Dependent_count, and we have the points colored based on Education_Level
+```{r}
+ggplot(data = data) +
+  geom_point(mapping = aes(x = Customer_Age, y = Dependent_count, colour = Education_Level ))
+library(plotly)
+```
+
+
+#####  f - Mixed plot of age, months on book in the bank  and contacts made by each customer
+```{r}
+a <- plot_ly(data, x = data$Customer_Age, type="box", name = 'age')
+b <-add_trace(a, x = data$Months_on_book, type="box", name = 'Months')
+c <-add_trace(b , x = data$Contacts_Count,type = "box" , name ="Contacts_made" )
+c
+```
+
+
+#####  g - Analysis of distribution on Customers Age
+```{r}
+values <- data$Customer_Age
+tab <- table(values)
+dframe <- as.data.frame(tab)
+dframe
+x <- as.numeric(as.character(dframe$values))
+x
+```
+
+The probability distribution is:
+```{r}
+f <- dframe$Freq / (sum(dframe$Freq))
+```
+
+
+The mean:
+```{r}
+mu <- sum(x * f)
+mu
+```
+
+
+Variance of the distribution is:
+```{r}
+sigmaSquare <- sum((x - mu)^2 * f)
+sigmaSquare
+sigma <- sqrt(sigmaSquare)
+sigma
+```
+
+Showing probability distribution of age:
+
+
+```{r}
+plot(x, f, type = 'h', xlab = "Age", ylab = "PMF", ylim = c(0, 0.06), main
+     = "Spike plot for Age")
+abline(h = 0 )
+```
+
+
+Showing cumulative  distribution of age:
+
+
+```{r}
+cdf <- c(0, cumsum(f))
+cdfplot <- stepfun(x, cdf)
+plot(cdfplot, verticals=FALSE, pch=16, main="CDF Plot for Age", xlab = "Age", ylab = "C
+DF")
+```
+
+#####  h - Analysis on the distribution of Customer's income
+```{r}
+values2 <- data$Dependent_count
+tab <- table(values2)
+dframe <- as.data.frame(tab)
+dframe
+x <- as.numeric(as.character(dframe$values2))
+x
+```
+
+The probability distribution is:
+```{r}
+f <- dframe$Freq / (sum(dframe$Freq))
+```
+
+The mean:
+```{r}
+mu <- sum(x * f)
+mu
+```
+
+The variance of the distribution is:
+```{r}
+sigmaSquare <- sum((x - mu)^2 * f)
+sigmaSquare
+sigma <- sqrt(sigmaSquare)
+sigma
+```
+
+Showing probability distribution of Income category:
+
+
+```{r}
+plot(x, f, type = 'h', xlab = "Income_Category", ylab = "PMF", ylim = c(0, 0.5), main
+     = "Spike plot for Income")
+abline(h = 0 )
+```
+
+Showing cumulative  distribution of Income category
+```{r}
+cdf <- c(0, cumsum(f))
+cdfplot <- stepfun(x, cdf)
+plot(cdfplot, verticals=FALSE, pch=16, main="CDF Plot for Income", xlab = "Age", ylab = "C
+DF")
+```
+
+##### PART 4- Central Limit Theorem 
+#####  Applying Central Limit Theorem  on age 
+```{r}
+Age <-data$Customer_Age
+ctable <- table(Age)
+```
+
+The mean is :
+```{r}
+mu <- mean(Age)
+mu
+
+sigma <- sd(Age)
+sigma
+```
+
+Histogram showing the age of the customers: 
+
+
+```{r}
+dframe <- as.data.frame(ctable)
+x <- as.numeric(as.character(data$Customer_Age))
+head(x)
+hist(x, probability = TRUE, xlim = c(0, 80), xlab = "Age", ylab = "Density", main = "Histogram of age")
+```
+
+#####  Showing results with sample size 5
+```{r}
+samples <- 1000
+sample_size <- 5
+xbar <- numeric(samples)
+for(i in 1:samples){
+  xbar[i] = mean(sample(x, size = sample_size, replace = T))
+}
+hist(xbar, prob = T, xlab = "Age",
+     main = "Densities of age with sample size 5", col = "purple")
+```
+
+
+Mean:
+```{r}
+mean1 <- mean(xbar)
+mean1
+```
+
+
+Standard deviation
+```{r}
+sd1 <- sd(xbar)
+sd1
+```
+#####  Showing results with sample size 20
+```{r}
+samples <- 1000
+sample_size <- 20
+xbar <- numeric(samples)
+for(i in 1:samples){
+  xbar[i] = mean(sample(x, size = sample_size, replace = T))
+}
+hist(xbar, prob = T, xlab = "Age",
+     main = "Densities of age with sample size 20", col = "red")
+```
+
+
+Mean:
+```{r}
+mean2 <- mean(xbar)
+mean2
+```
+Standard deviation
+```{r}
+sd2 <- sd(xbar)
+sd2
+```
+#####  Showing results with sample size 50
+```{r}
+samples <- 1000
+sample_size <- 50
+xbar <- numeric(samples)
+for(i in 1:samples){
+  xbar[i] = mean(sample(x, size = sample_size, replace = T))
+}
+hist(xbar, prob = T, xlab = "Age",
+     main = "Densities of age with sample size 50", col = "brown")
+```
+
+
+Mean:
+```{r}
+mean3 <- mean(xbar)
+mean3
+```
+
+Standard deviation
+```{r}
+sd3 <- sd(xbar)
+sd3
+```
+
+
+```{r}
+cat("1st distribution:\nMean =",mean1,"\nSD =",sd1)
+cat("2nd distribution:\nMean =",mean2,"\nSD =",sd2)
+cat("3rd distribution:\nMean =",mean3,"\nSD =",sd3)
+```
+
+
+##### INFERENCE: As we change our sample space and keep increasing it, we notice that the mean almost remains the same whereas the Standard deviation decreases hence proving the property of Central Limit Theorem
+
+
+
+##### PART 5- Sampling
+```{r}
+library(sampling)
+table(data$Customer_Age)
+hist(data$Customer_Age,col="yellow")
+```
+
+##### Using sampling methods for sample size of 200
+
+###### Without replacement 
+```{r}
+sample.size <- 200
+s <- srswor(sample.size,nrow(data))
+sample.1 <- data[s != 0, ]
+mean_srswor <- mean(sample.1$Customer_Age)
+set.seed(153)
+```
+
+
+###### With replacement 
+```{r}
+s <- srswr(sample.size, nrow(data))
+sample.2 <- data[s != 0, ]
+mean_srswr <- mean(sample.2$Customer_Age)
+set.seed(123)
+```
+
+###### Systematic Sampling
+```{r}
+N <- nrow(data)
+n <- 200
+```
+
+###### items in each group
+```{r}
+k <- ceiling(N / n)
+k
+```
+
+
+###### random item from first group 
+```{r}
+r <- sample(k, 1)
+r
+```
+
+###### selecting every kth item 
+```{r}
+s <- seq(r, by = k, length = n)
+head(s)
+```
+
+
+```{r}
+sample.3 <- data[s, ]
+table(sample.3$Customer_Age)
+mean_systematic <- mean(sample.3$Customer_Age)
+mean_systematic
+```
+
+###### Systematic sampling with unequal probabilities
+
+```{r}
+pik <- inclusionprobabilities(data$Customer_Age, sample.size)
+s <- UPsystematic(pik)
+sample.4 <- data[s != 0, ]
+table(sample.4$Customer_Age)
+```
+
+######  Stratified Sampling
+
+
+```{r}
+data["age_range"] = NA
+data$age_range <- cut(data$Customer_Age, breaks = c(0, 25, 50, 75, Inf), labels = c('A', 'B', 'C','D'))
+data_age <- data.frame(
+  Customer_Age = data$Customer_Age,
+  age_range = data$age_range
+)
+freq <- table(data_age$age_range)
+freq
+```
+
+```{r}
+set.seed(123)
+head(data_age)
+```
+
+
+###### Cluster sampling
+```{r}
+cl <- cluster(data, c("Customer_Age"), size = 4, method = "srswor")
+sample.6 <- getdata(data, cl)
+table(sample.6$Customer_Age)
+mean_cluster <- mean(sample.6$Customer_Age)
+mean_cluster
+```
+
+
+##### Mean without replacement
+```{r}
+mean_srswor
+```
+
+
+##### Mean with replacement
+```{r}
+mean_srswr
+```
+
+##### Systematic Mean
+```{r}
+mean_systematic
+```
+
+
+##### Using sampling methods for sample size of 700
+
+
+###### Without replacement 
+```{r}
+sample.size <- 700
+s <- srswor(sample.size,nrow(data))
+sample.1 <- data[s != 0, ]
+mean_srswor <- mean(sample.1$Customer_Age)
+```
+
+
+###### With replacement
+```{r}
+set.seed(153)
+s <- srswr(sample.size, nrow(data))
+sample.2 <- data[s != 0, ]
+mean_srswr <- mean(sample.2$Customer_Age)
+```
+
+
+###### Systematic Sampling
+```{r}
+N <- nrow(data)
+n <- 700
+```
+
+###### items in each group
+```{r}
+k <- ceiling(N / n)
+k
+```
+
+
+###### random items in first group 
+```{r}
+r <- sample(k, 1)
+r
+```
+
+
+###### selecting every kth item
+```{r}
+s <- seq(r, by = k, length = n)
+head(s)
+```
+
+```{r}
+sample.3 <- data[s, ]
+table(sample.3$Customer_Age)
+mean_systematic <- mean(sample.3$Customer_Age)
+```
+
+
+###### Systematic Sampling with unequal probabilities
+```{r}
+pik <- inclusionprobabilities(data$Customer_Age, sample.size)
+s <- UPsystematic(pik)
+sample.4 <- data[s != 0, ]
+table(sample.4$Customer_Age)
+```
+
+
+######  Stratified sampling
+```{r}
+freq <- table(data_age$age_range)
+freq
+set.seed(123)
+head(data_age)
+```
+
+
+###### Cluster mean
+```{r}
+mean_cluster
+```
+
+###### Systematic mean
+```{r}
+mean_systematic
+```
+
+###### Mean With replacement
+```{r}
+mean_srswr
+```
+
+###### Mean Without replacement
+```{r}
+mean_srswor
+```
